@@ -1,10 +1,10 @@
 package me.chriss99.lambda
 
-import me.chriss99.lambda.Expression.*
+import me.chriss99.lambda.LambdaExpr.*
 import java.util.*
 
-fun lazyReducible(expr: Expression): Apply? {
-    val queue: LinkedList<Expression> = LinkedList()
+fun lazyReducible(expr: LambdaExpr): Apply? {
+    val queue: LinkedList<LambdaExpr> = LinkedList()
     queue.add(expr)
 
     while (!queue.isEmpty())
@@ -22,6 +22,6 @@ fun lazyReducible(expr: Expression): Apply? {
     return null
 }
 
-fun lazyReduce(expr: Expression): Expression {
+fun lazyReduce(expr: LambdaExpr): LambdaExpr {
     return reduceAll(expr, ::lazyReducible)
 }

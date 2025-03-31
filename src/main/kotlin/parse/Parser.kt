@@ -1,30 +1,30 @@
 package me.chriss99.parse
 
-import me.chriss99.lambda.Expression
+import me.chriss99.lambda.LambdaExpr
 import java.util.UUID
 import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
-fun parse(tokens: List<Token>): Expression {
+fun parse(tokens: List<Token>): LambdaExpr {
     return parse(listOf(*tokens.toTypedArray(), Token.EndOfFile), 0, HashMap(), 0).first
 }
 
-private fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, Int>>, cameFrom: Int, searching: KClass<out Token>? = null): Pair<Expression, Int> {
+private fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, Int>>, cameFrom: Int, searching: KClass<out Token>? = null): Pair<LambdaExpr, Int> {
     when (val current = tokens[i]) {
-        is Token.Var -> return Expression.Var(current.name, idOf(current.name, i, ids)) to i
+        is Token.Var -> return LambdaExpr.Var(current.name, idOf(current.name, i, ids)) to i
         is Token.Lambda -> {
             var next = i+1
-            val variables = mutableListOf<Expression.Var>()
+            val variables = mutableListOf<LambdaExpr.Var>()
             while (tokens[next] is Token.Var || next == i+1) {
-                variables.add(verifyToken<Token.Var>(tokens, next, i).name.let { Expression.Var(it, newID(it, ids, tokens, next)) })
+                variables.add(verifyToken<Token.Var>(tokens, next, i).name.let { LambdaExpr.Var(it, newID(it, ids, tokens, next)) })
                 next++
             }
             verifyToken<Token.Dot>(tokens, next, i)
             val (body, i) = parse(tokens, next+1, HashMap(ids), i)
 
-            var lambda = Expression.Lambda(variables.removeLast(), body)
+            var lambda = LambdaExpr.Lambda(variables.removeLast(), body)
             while (variables.isNotEmpty())
-                lambda = Expression.Lambda(variables.removeLast(), lambda)
+                lambda = LambdaExpr.Lambda(variables.removeLast(), lambda)
 
             return lambda to i
         }
@@ -33,7 +33,7 @@ private fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, I
 
             while (tokens[exprEnd+1] !is Token.RParen) {
                 val res = parse(tokens, exprEnd+1, HashMap(ids), i, Token.RParen::class)
-                expr = Expression.Apply(expr, res.first)
+                expr = LambdaExpr.Apply(expr, res.first)
                 exprEnd = res.second
             }
 

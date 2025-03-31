@@ -1,16 +1,16 @@
 package me.chriss99.lambda
 
-import me.chriss99.lambda.Expression.*
+import me.chriss99.lambda.LambdaExpr.*
 import java.util.UUID
 
-fun reduce(appl: Apply): Expression {
+fun reduce(appl: Apply): LambdaExpr {
     return when (appl.apply) {
         is Var, is Apply -> appl
         is Lambda -> replace(appl.apply.body, appl.apply.variable, appl.to)
     }
 }
 
-private fun replace(expr: Expression, replace: Var, with: Expression): Expression {
+private fun replace(expr: LambdaExpr, replace: Var, with: LambdaExpr): LambdaExpr {
     return when (expr) {
         is Var -> if (expr.id == replace.id) replaceIDs(with) else expr
         is Lambda -> Lambda(expr.variable, replace(expr.body, replace, with))
@@ -18,7 +18,7 @@ private fun replace(expr: Expression, replace: Var, with: Expression): Expressio
     }
 }
 
-private fun replaceIDs(expr: Expression, ids: HashMap<UUID, UUID> = HashMap()): Expression {
+private fun replaceIDs(expr: LambdaExpr, ids: HashMap<UUID, UUID> = HashMap()): LambdaExpr {
     return when (expr) {
         is Var -> Var(expr.name, idOf(expr.id, ids))
         is Lambda -> Lambda(Var(expr.variable.name, newID(expr.variable.id, ids)), replaceIDs(expr.body, ids))
@@ -38,7 +38,7 @@ private fun idOf(name: UUID, ids: java.util.HashMap<UUID, UUID>): UUID {
     return ids[name] ?: UUID.randomUUID().also { ids[name] = it }
 }
 
-fun reduceAt(expr: Expression, appl: Apply): Expression {
+fun reduceAt(expr: LambdaExpr, appl: Apply): LambdaExpr {
     if (expr === appl)
         return reduce(expr)
 
@@ -49,7 +49,7 @@ fun reduceAt(expr: Expression, appl: Apply): Expression {
     }
 }
 
-fun reduceAll(expr: Expression, strategy: (expr: Expression) -> Apply?): Expression {
+fun reduceAll(expr: LambdaExpr, strategy: (expr: LambdaExpr) -> Apply?): LambdaExpr {
     var current = expr
     while (true) {
         val reducible = strategy(current) ?: break
